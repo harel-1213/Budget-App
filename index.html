@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול תקציב חודשי</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <div id="notification"></div>
+    <div class="container">
+        <div class="header">
+            <h1>ניהול תקציב חודשי</h1>
+        </div>
+
+        <div class="balance-cards">
+            <div class="balance-card balance">
+                <h3>יתרה כוללת</h3>
+                <div class="amount" id="total-balance">₪0</div>
+            </div>
+            <div class="balance-card income">
+                <h3>הכנסות</h3>
+                <div class="amount" id="total-income">₪0</div>
+            </div>
+            <div class="balance-card expenses">
+                <h3>הוצאות</h3>
+                <div class="amount" id="total-expenses">₪0</div>
+            </div>
+        </div>
+
+        <div class="form-container">
+            <h2>הוסף תנועה חדשה</h2>
+            <form id="transaction-form">
+                <div class="form-group">
+                    <label>תיאור</label>
+                    <input type="text" id="description" required>
+                </div>
+                <div class="form-group">
+                    <label>סכום</label>
+                    <input type="number" id="amount" required>
+                </div>
+                <div class="form-group">
+                    <label>סוג</label>
+                    <select id="type" required>
+                        <option value="income">הכנסה</option>
+                        <option value="expense">הוצאה</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>קטגוריה</label>
+                    <select id="category" required>
+                        <option value="salary">משכורת</option>
+                        <option value="business">עסק</option>
+                        <option value="food">מזון</option>
+                        <option value="transportation">תחבורה</option>
+                        <option value="entertainment">בילויים</option>
+                        <option value="shopping">קניות</option>
+                        <option value="bills">חשבונות</option>
+                        <option value="other">אחר</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn">הוסף תנועה</button>
+            </form>
+        </div>
+
+        <div class="transactions">
+            <h2>היסטוריית תנועות</h2>
+            <div id="transactions-list"></div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="expensesChart"></canvas>
+        </div>
+
+        <div class="category-summary">
+            <h2>סיכום הוצאות לפי קטגוריות</h2>
+            <div class="category-grid" id="category-summary"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
