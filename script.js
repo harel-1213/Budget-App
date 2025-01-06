@@ -270,7 +270,54 @@ class BudgetApp {
         };
         return colors[category] || '#95a5a6';
     }
+updateChart() {
+    if (!this.chart) return;
+    
+    const expensesByCategory = {};
+    this.transactions
+        .filter(t => t.type === 'expense')
+        .forEach(t => {
+            expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + t.amount;
+        });
 
+    // יצירת תוויות מותאמות עם הסכום
+    const labels = Object.keys(expensesByCategory).map(category => 
+        `${category} - ₪${Math.round(expensesByCategory[category])}`
+    );
+
+    this.chart.data.labels = labels;
+    this.chart.data.datasets[0].data = Object.values(expensesByCategory);
+    
+    // הגדרות נוספות לתצוגה
+    this.chart.options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'right',
+                rtl: true,
+                labels: {
+                    font: {
+                        size: 14
+                    },
+                    padding: 20
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const value = context.raw;
+                        const percentage = ((value / context.dataset.data.reduce((a, b) => a + b, 0)) * 100).toFixed(1);
+                        return `₪${Math.round(value)} (${percentage}%)`;
+                    }
+                }
+            }
+        }
+    };
+    
+    this.chart.update();
+}
     updateCategorySummary() {
         const categorySummary = document.getElementById('category-summary');
         const expensesByCategory = {};
