@@ -149,37 +149,39 @@ function updateTransactionsList() {
     `).join('');
 }
 
+// פונקציה לעדכון הגרף
 function updateChart() {
     const ctx = document.getElementById('expenseChart').getContext('2d');
     
-    // Calculate expenses by category
+    // קיבוץ ההוצאות לפי קטגוריות
     const expensesByCategory = {};
     transactions
-        .filter(t => t.type === 'expense')
+        .filter(t => t.type === 'expense')  // בחר רק את ההוצאות
         .forEach(t => {
-            expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + t.amount;
+            // אם כבר יש סכום עבור קטגוריה זו, נוסיף את הסכום שלה
+            if (expensesByCategory[t.category]) {
+                expensesByCategory[t.category] += t.amount;
+            } else {
+                // אם זו הפעם הראשונה שקטגוריה זו מופיעה, נאתחל את הסכום שלה
+                expensesByCategory[t.category] = t.amount;
+            }
         });
 
-    // Destroy existing chart if it exists
-    if (window.expenseChart) {
-        window.expenseChart.destroy();
+    // אם הגרף קיים, נמחוק אותו קודם
+    if (window.expenseChart instanceof Chart) {
+        window.expenseChart.destroy(); // רק אם מדובר באובייקט גרף של Chart.js
     }
 
-    // Create new chart
+    // יצירת גרף חדש
     window.expenseChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: Object.keys(expensesByCategory).map(cat => cat),
+            labels: Object.keys(expensesByCategory),  // קטגוריות ההוצאות
             datasets: [{
-                data: Object.values(expensesByCategory),
+                data: Object.values(expensesByCategory),  // סכומים לכל קטגוריה
                 backgroundColor: [
-                    '#3b82f6',
-                    '#ef4444',
-                    '#f59e0b',
-                    '#22c55e',
-                    '#8b5cf6',
-                    '#ec4899',
-                    '#64748b'
+                    '#3b82f6', '#ef4444', '#f59e0b', '#22c55e', 
+                    '#8b5cf6', '#ec4899', '#64748b'
                 ]
             }]
         },
@@ -193,6 +195,7 @@ function updateChart() {
         }
     });
 }
+
 
 function formatCurrency(amount) {
     return new Intl.NumberFormat('he-IL', {
