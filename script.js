@@ -23,7 +23,7 @@ function switchTab(tabName) {
     // Update active state in navbar
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
-        if (item.textContent.includes(tabName === 'dashboard' ? 'דשבורד' : 'תנועות')) {
+        if (item.textContent.includes(tabName === 'dashboard' ? 'דשבורד' : tabName === 'transactions' ? 'תנועות' : 'סיכום')) {
             item.classList.add('active');
         }
     });
@@ -47,21 +47,19 @@ function handleTransactionSubmit(event) {
     event.preventDefault();
     const form = event.target;
     const transaction = {
-        type: form.type.value, // סוג התנועה: הכנסה או הוצאה
-        category: form.category.value, // קטגוריה: מזון, תחבורה וכו'
-        amount: parseFloat(form.amount.value), // הסכום של התנועה
-        description: form.description.value, // תיאור התנועה
-        date: new Date().toISOString(), // תאריך התנועה
-        id: Date.now() // מזהה ייחודי
+        type: form.type.value,
+        category: form.category.value,
+        amount: parseFloat(form.amount.value),
+        description: form.description.value,
+        date: new Date().toISOString(),
+        id: Date.now()
     };
 
-    // הוספת התנועה לרשימה
     transactions.unshift(transaction);
     localStorage.setItem('transactions', JSON.stringify(transactions));
 
-    // עדכון הממשק
     updateUI();
-    closeModal(); // סגירת החלון
+    closeModal();
 }
 
 function deleteTransaction(id) {
@@ -97,6 +95,7 @@ function updateUI() {
     updateDashboard();
     updateTransactionsList();
     updateChart();
+    updateExpensesSummary(); // Added this line
 }
 
 function updateDashboard() {
@@ -152,36 +151,69 @@ function updateTransactionsList() {
     `).join('');
 }
 
-// פונקציה לעדכון הגרף
+// New function to update expenses summary
+function updateExpensesSummary() {
+    const summaryList = document.getElementById('expensesSummaryList');
+    const expensesByCategory = {};
+    let totalExpenses = 0;
+
+    // Calculate expenses by category
+    transactions
+        .filter(t => t.type === 'expense')
+        .forEach(t => {
+            expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + t.amount;
+            totalExpenses += t.amount;
+        });
+
+    // Create HTML for summary list
+    const summaryHTML = Object.entries(expensesByCategory)
+        .sort((a, b) => b[1] - a[1]) // Sort by amount (highest first)
+        .map(([category, amount]) => {
+            const percentage = ((amount / totalExpenses) * 100).toFixed(1);
+            return `
+                <li style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid var(--border);">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div class="category-icon">
+                            ${categoryIcons[category]}
+                        </div>
+                        <div>
+                            <div>${category}</div>
+                            <small style="color: var(--secondary)">${percentage}% מסך ההוצאות</small>
+                        </div>
+                    </div>
+                    <span class="amount expense">${formatCurrency(amount)}</span>
+                </li>
+            `;
+        })
+        .join('');
+
+    summaryList.innerHTML = totalExpenses > 0 ? summaryHTML : '<li style="text-align: center; padding: 20px;">אין הוצאות להצגה</li>';
+}
+
 function updateChart() {
     const ctx = document.getElementById('expenseChart').getContext('2d');
     
-    // קיבוץ ההוצאות לפי קטגוריות
     const expensesByCategory = {};
     transactions
-        .filter(t => t.type === 'expense')  // בחר רק את ההוצאות
+        .filter(t => t.type === 'expense')
         .forEach(t => {
-            // אם כבר יש סכום עבור קטגוריה זו, נוסיף את הסכום שלה
             if (expensesByCategory[t.category]) {
                 expensesByCategory[t.category] += t.amount;
             } else {
-                // אם זו הפעם הראשונה שקטגוריה זו מופיעה, נאתחל את הסכום שלה
                 expensesByCategory[t.category] = t.amount;
             }
         });
 
-    // אם הגרף קיים, נמחוק אותו קודם
     if (window.expenseChart instanceof Chart) {
-        window.expenseChart.destroy(); // רק אם מדובר באובייקט גרף של Chart.js
+        window.expenseChart.destroy();
     }
 
-    // יצירת גרף חדש
     window.expenseChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: Object.keys(expensesByCategory),  // קטגוריות ההוצאות
+            labels: Object.keys(expensesByCategory),
             datasets: [{
-                data: Object.values(expensesByCategory),  // סכומים לכל קטגוריה
+                data: Object.values(expensesByCategory),
                 backgroundColor: [
                     '#3b82f6', '#ef4444', '#f59e0b', '#22c55e', 
                     '#8b5cf6', '#ec4899', '#64748b'
@@ -198,7 +230,6 @@ function updateChart() {
         }
     });
 }
-
 
 function formatCurrency(amount) {
     return new Intl.NumberFormat('he-IL', {
