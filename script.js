@@ -1,379 +1,215 @@
-class BudgetApp {
-    constructor() {
-        this.transactions = JSON.parse(localStorage.getItem('transactions')) || [];
-        this.form = document.getElementById('transaction-form');
-        this.transactionsList = document.getElementById('transactions-list');
-        this.chart = null;
-        this.editingTransactionId = null;
-        this.submitButton = this.form.querySelector('button[type="submit"]');
+// Initialize state
+let currentTab = 'dashboard';
+let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+let currentFilter = 'all';
 
-        this.initializeEventListeners();
-        this.updateUI();
-        this.initializeChart();
-    }
+const categoryIcons = {
+    food: '🍽️',
+    transport: '🚗',
+    bills: '📄',
+    entertainment: '🎬',
+    shopping: '🛍️',
+    salary: '💰',
+    other: '📎'
+};
 
-    initializeEventListeners() {
-        this.form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (this.editingTransactionId) {
-                this.updateTransaction();
-            } else {
-                this.addTransaction();
-            }
-        });
-
-        const cancelButton = document.createElement('button');
-        cancelButton.textContent = 'ביטול עריכה';
-        cancelButton.className = 'btn';
-        cancelButton.style.display = 'none';
-        cancelButton.style.marginRight = '10px';
-        cancelButton.style.backgroundColor = '#e74c3c';
-        
-        this.submitButton.parentNode.insertBefore(cancelButton, this.submitButton.nextSibling);
-        
-        cancelButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.cancelEdit();
-        });
-        
-        this.cancelButton = cancelButton;
-    }
-
-    initializeChart() {
-        const ctx = document.getElementById('expensesChart').getContext('2d');
-        this.chart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: [],
-                datasets: [{
-                    data: [],
-                    backgroundColor: [
-                        '#2ecc71',
-                        '#e74c3c',
-                        '#3498db',
-                        '#f1c40f',
-                        '#9b59b6',
-                        '#e67e22'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
-    }
-
-    cancelEdit() {
-        this.editingTransactionId = null;
-        this.form.reset();
-        this.submitButton.textContent = 'הוסף תנועה';
-        this.cancelButton.style.display = 'none';
-    }
-
-    addTransaction() {
-        try {
-            const description = document.getElementById('description').value;
-            const amount = parseFloat(document.getElementById('amount').value);
-            const type = document.getElementById('type').value;
-            const category = document.getElementById('category').value;
-
-            if (!description || isNaN(amount) || !type || !category) {
-                throw new Error('כל השדות חייבים להיות מלאים');
-            }
-
-            const transaction = {
-                id: Date.now(),
-                description,
-                amount,
-                type,
-                category,
-                date: new Date().toISOString()
-            };
-
-            this.transactions.push(transaction);
-            this.saveTransactions();
-            this.updateUI();
-            this.showNotification('התנועה נוספה בהצלחה', 'success');
-            this.form.reset();
-        } catch (error) {
-            this.showNotification(error.message, 'error');
-        }
-    }
-
-    updateTransaction() {
-        try {
-            const description = document.getElementById('description').value;
-            const amount = parseFloat(document.getElementById('amount').value);
-            const type = document.getElementById('type').value;
-            const category = document.getElementById('category').value;
-
-            if (!description || isNaN(amount) || !type || !category) {
-                throw new Error('כל השדות חייבים להיות מלאים');
-            }
-
-            const index = this.transactions.findIndex(t => t.id === this.editingTransactionId);
-            if (index === -1) {
-                throw new Error('התנועה לא נמצאה');
-            }
-
-            this.transactions[index] = {
-                ...this.transactions[index],
-                description,
-                amount,
-                type,
-                category
-            };
-            
-            this.saveTransactions();
-            this.updateUI();
-            this.showNotification('התנועה עודכנה בהצלחה', 'success');
-            this.form.reset();
-            this.editingTransactionId = null;
-            this.submitButton.textContent = 'הוסף תנועה';
-            this.cancelButton.style.display = 'none';
-        } catch (error) {
-            this.showNotification(error.message, 'error');
-        }
-    }
-
-    editTransaction(id) {
-        try {
-            const transaction = this.transactions.find(t => t.id === id);
-            
-            if (!transaction) {
-                throw new Error('התנועה לא נמצאה');
-            }
-
-            document.getElementById('description').value = transaction.description;
-            document.getElementById('amount').value = transaction.amount;
-            document.getElementById('type').value = transaction.type;
-            document.getElementById('category').value = transaction.category;
-            
-            this.editingTransactionId = id;
-            this.submitButton.textContent = 'עדכן תנועה';
-            this.cancelButton.style.display = 'inline-block';
-            
-            this.form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        } catch (error) {
-            this.showNotification(error.message, 'error');
-        }
-    }
-
-    deleteTransaction(id) {
-        try {
-            this.transactions = this.transactions.filter(transaction => transaction.id !== id);
-            this.saveTransactions();
-            this.updateUI();
-            this.showNotification('התנועה נמחקה בהצלחה', 'success');
-
-            if (this.editingTransactionId === id) {
-                this.cancelEdit();
-            }
-        } catch (error) {
-            this.showNotification('שגיאה במחיקת התנועה', 'error');
-        }
-    }
-
-    calculateTotals() {
-        const income = this.transactions
-            .filter(t => t.type === 'income')
-            .reduce((acc, t) => acc + t.amount, 0);
-
-        const expenses = this.transactions
-            .filter(t => t.type === 'expense')
-            .reduce((acc, t) => acc + t.amount, 0);
-
-        return { 
-            income, 
-            expenses, 
-            balance: income - expenses 
-        };
-    }
-
-    updateUI() {
-        const { income, expenses, balance } = this.calculateTotals();
-        
-        document.getElementById('total-balance').textContent = `₪${Math.round(balance)}`;
-        document.getElementById('total-income').textContent = `₪${Math.round(income)}`;
-        document.getElementById('total-expenses').textContent = `₪${Math.round(expenses)}`;
-
-        this.renderTransactionsList();
-        this.updateChart();
-        this.updateCategorySummary();
-    }
-
-    renderTransactionsList() {
-        this.transactionsList.innerHTML = this.transactions
-            .sort((a, b) => new Date(b.date) - new Date(a.date))
-            .map(transaction => `
-                <div class="transaction-item">
-                    <div class="transaction-info">
-                        <span class="transaction-category ${transaction.type}-category">
-                            ${transaction.category}
-                        </span>
-                        <div>
-                            <div>${transaction.description}</div>
-                            <small>${new Date(transaction.date).toLocaleDateString()}</small>
-                        </div>
-                    </div>
-                    <div class="transaction-amount">
-                        <span style="color: ${transaction.type === 'income' ? 'var(--primary)' : 'var(--secondary)'}">
-                            ${transaction.type === 'income' ? '+' : '-'}₪${Math.round(transaction.amount)}
-                        </span>
-                        <i class="fas fa-edit edit-btn" onclick="budgetApp.editTransaction(${transaction.id})"></i>
-                        <i class="fas fa-trash delete-btn" onclick="budgetApp.deleteTransaction(${transaction.id})"></i>
-                    </div>
-                </div>
-            `).join('');
-    }
-
-    updateChart() {
-        if (!this.chart) return;
-        
-        const expensesByCategory = {};
-        this.transactions
-            .filter(t => t.type === 'expense')
-            .forEach(t => {
-                expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + t.amount;
-            });
-
-        this.chart.data.labels = Object.keys(expensesByCategory);
-        this.chart.data.datasets[0].data = Object.values(expensesByCategory);
-        this.chart.update();
-    }
-
-    getCategoryIcon(category) {
-        const icons = {
-            salary: 'fa-money-bill-wave',
-            business: 'fa-briefcase',
-            food: 'fa-utensils',
-            transportation: 'fa-car',
-            entertainment: 'fa-film',
-            shopping: 'fa-shopping-cart',
-            bills: 'fa-file-invoice-dollar',
-            other: 'fa-question'
-        };
-        return icons[category] || 'fa-question';
-    }
-
-    getCategoryColor(category) {
-        const colors = {
-            salary: '#2ecc71',
-            business: '#3498db',
-            food: '#e74c3c',
-            transportation: '#f1c40f',
-            entertainment: '#9b59b6',
-            shopping: '#e67e22',
-            bills: '#1abc9c',
-            other: '#95a5a6'
-        };
-        return colors[category] || '#95a5a6';
-    }
-updateChart() {
-    if (!this.chart) return;
+// Tab switching functionality
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.style.display = 'none';
+    });
+    document.getElementById(tabName).style.display = 'block';
     
+    // Update active state in navbar
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.textContent.includes(tabName === 'dashboard' ? 'דשבורד' : 'תנועות')) {
+            item.classList.add('active');
+        }
+    });
+
+    currentTab = tabName;
+    updateUI();
+}
+
+// Modal functionality
+function openModal() {
+    document.getElementById('transactionModal').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('transactionModal').style.display = 'none';
+    document.getElementById('transactionForm').reset();
+}
+
+// Transaction handling
+function handleTransactionSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    const transaction = {
+        type: form.type.value,
+        category: form.category.value,
+        amount: parseFloat(form.amount.value),
+        description: form.description.value,
+        date: new Date().toISOString(),
+        id: Date.now()
+    };
+
+    transactions.unshift(transaction);
+    localStorage.setItem('transactions', JSON.stringify(transactions));
+    updateUI();
+    closeModal();
+}
+
+function deleteTransaction(id) {
+    if (confirm('האם אתה בטוח שברצונך למחוק תנועה זו?')) {
+        transactions = transactions.filter(t => t.id !== id);
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+        updateUI();
+    }
+}
+
+// Filter functionality
+function setFilter(filter) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.textContent === getFilterText(filter)) {
+            btn.classList.add('active');
+        }
+    });
+    updateTransactionsList();
+}
+
+function getFilterText(filter) {
+    switch(filter) {
+        case 'income': return 'הכנסות';
+        case 'expense': return 'הוצאות';
+        default: return 'הכל';
+    }
+}
+
+// UI Updates
+function updateUI() {
+    updateDashboard();
+    updateTransactionsList();
+    updateChart();
+}
+
+function updateDashboard() {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const monthlyTransactions = transactions.filter(t => new Date(t.date) >= monthStart);
+    const monthlyIncome = monthlyTransactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + t.amount, 0);
+    const monthlyExpense = monthlyTransactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+    const totalBalance = transactions
+        .reduce((sum, t) => sum + (t.type === 'income' ? t.amount : -t.amount), 0);
+
+    document.getElementById('totalBalance').textContent = formatCurrency(totalBalance);
+    document.getElementById('monthlyIncome').textContent = formatCurrency(monthlyIncome);
+    document.getElementById('monthlyExpense').textContent = formatCurrency(monthlyExpense);
+}
+
+function updateTransactionsList() {
+    const listId = currentTab === 'dashboard' ? 'transactionsList' : 'allTransactionsList';
+    const list = document.getElementById(listId);
+    const filteredTransactions = transactions.filter(t => {
+        if (currentFilter === 'all') return true;
+        return t.type === currentFilter;
+    });
+
+    const transactionsToShow = currentTab === 'dashboard' ? 
+        filteredTransactions.slice(0, 5) : filteredTransactions;
+
+    list.innerHTML = transactionsToShow.map(t => `
+        <div class="transaction">
+            <div class="transaction-info">
+                <div class="category-icon">
+                    ${categoryIcons[t.category]}
+                </div>
+                <div>
+                    <div>${t.description}</div>
+                    <small style="color: var(--secondary)">${new Date(t.date).toLocaleDateString('he-IL')} • ${t.category}</small>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="amount ${t.type === 'income' ? 'income' : 'expense'}">
+                    ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
+                </span>
+                <button class="btn secondary" onclick="deleteTransaction(${t.id})" style="padding: 5px 10px;">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function updateChart() {
+    const ctx = document.getElementById('expenseChart').getContext('2d');
+    
+    // Calculate expenses by category
     const expensesByCategory = {};
-    this.transactions
+    transactions
         .filter(t => t.type === 'expense')
         .forEach(t => {
             expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + t.amount;
         });
 
-    // יצירת תוויות מותאמות עם הסכום
-    const labels = Object.keys(expensesByCategory).map(category => 
-        `${category} - ₪${Math.round(expensesByCategory[category])}`
-    );
+    // Destroy existing chart if it exists
+    if (window.expenseChart) {
+        window.expenseChart.destroy();
+    }
 
-    this.chart.data.labels = labels;
-    this.chart.data.datasets[0].data = Object.values(expensesByCategory);
-    
-    // הגדרות נוספות לתצוגה
-    this.chart.options = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: true,
-                position: 'right',
-                rtl: true,
-                labels: {
-                    font: {
-                        size: 14
-                    },
-                    padding: 20
-                }
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        const value = context.raw;
-                        const percentage = ((value / context.dataset.data.reduce((a, b) => a + b, 0)) * 100).toFixed(1);
-                        return `₪${Math.round(value)} (${percentage}%)`;
-                    }
+    // Create new chart
+    window.expenseChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(expensesByCategory).map(cat => cat),
+            datasets: [{
+                data: Object.values(expensesByCategory),
+                backgroundColor: [
+                    '#3b82f6',
+                    '#ef4444',
+                    '#f59e0b',
+                    '#22c55e',
+                    '#8b5cf6',
+                    '#ec4899',
+                    '#64748b'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
                 }
             }
         }
-    };
-    
-    this.chart.update();
-}
-    updateCategorySummary() {
-        const categorySummary = document.getElementById('category-summary');
-        const expensesByCategory = {};
-        let totalExpenses = 0;
-
-        this.transactions
-            .filter(t => t.type === 'expense')
-            .forEach(t => {
-                expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + t.amount;
-                totalExpenses += t.amount;
-            });
-
-        if (totalExpenses === 0) {
-            categorySummary.innerHTML = '<p>אין הוצאות להצגה.</p>';
-            return;
-        }
-
-        const categoryHTML = Object.entries(expensesByCategory)
-            .sort((a, b) => b[1] - a[1])
-            .map(([category, amount]) => {
-                const percentage = Math.round((amount / totalExpenses) * 100);
-                return `
-                    <div class="category-card">
-                        <div class="category-icon" style="background-color: ${this.getCategoryColor(category)}">
-                            <i class="fas ${this.getCategoryIcon(category)}"></i>
-                        </div>
-                        <div class="category-details">
-                            <div class="category-name">${category}</div>
-                            <div class="category-amount">₪${Math.round(amount)}</div>
-                            <div class="category-percentage">${percentage}% מסך ההוצאות</div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${percentage}%; background-color: ${this.getCategoryColor(category)}"></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-        categorySummary.innerHTML = categoryHTML;
-    }
-
-    saveTransactions() {
-        localStorage.setItem('transactions', JSON.stringify(this.transactions));
-    }
-
-    showNotification(message, type) {
-        const notification = document.getElementById('notification');
-        notification.textContent = message;
-        notification.className = type;
-        notification.style.display = 'block';
-
-        setTimeout(() => {
-            notification.style.display = 'none';
-        }, 3000);
-    }
+    });
 }
 
-// יצירת אובייקט חדש של האפליקציה
-const budgetApp = new BudgetApp();
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('he-IL', {
+        style: 'currency',
+        currency: 'ILS'
+    }).format(amount);
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('transactionModal');
+    if (event.target === modal) {
+        closeModal();
+    }
+};
+
+// Initialize the app
+document.addEventListener('DOMContentLoaded', () => {
+    updateUI();
+});
