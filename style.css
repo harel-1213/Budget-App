@@ -44,6 +44,26 @@ header {
     align-items: center;
 }
 
+/* ... (previous CSS rules stay the same until the logo part) ... */
+
+.logo-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--primary);
+    font-size: 1.8rem;
+    font-weight: bold;
+}
+
+/* ... (rest of the CSS stays the same) ... */
 .logo {
     display: flex;
     align-items: center;
