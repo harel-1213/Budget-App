@@ -13,6 +13,16 @@ const categoryIcons = {
     other: '📎'
 };
 
+const categoryTranslations = {
+    food: 'מזון',
+    transport: 'תחבורה',
+    bills: 'חשבונות',
+    entertainment: 'בידור',
+    shopping: 'קניות',
+    salary: 'משכורת',
+    other: 'אחר'
+};
+
 // Tab switching functionality
 function switchTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(tab => {
@@ -95,7 +105,7 @@ function updateUI() {
     updateDashboard();
     updateTransactionsList();
     updateChart();
-    updateExpensesSummary(); // Added this line
+    updateExpensesSummary();
 }
 
 function updateDashboard() {
@@ -136,7 +146,7 @@ function updateTransactionsList() {
                 </div>
                 <div>
                     <div>${t.description}</div>
-                    <small style="color: var(--secondary)">${new Date(t.date).toLocaleDateString('he-IL')} • ${t.category}</small>
+                    <small style="color: var(--secondary)">${new Date(t.date).toLocaleDateString('he-IL')} • ${categoryTranslations[t.category]}</small>
                 </div>
             </div>
             <div style="display: flex; align-items: center; gap: 10px;">
@@ -151,7 +161,6 @@ function updateTransactionsList() {
     `).join('');
 }
 
-// New function to update expenses summary
 function updateExpensesSummary() {
     const summaryList = document.getElementById('expensesSummaryList');
     const expensesByCategory = {};
@@ -177,7 +186,7 @@ function updateExpensesSummary() {
                             ${categoryIcons[category]}
                         </div>
                         <div>
-                            <div>${category}</div>
+                            <div>${categoryTranslations[category]}</div>
                             <small style="color: var(--secondary)">${percentage}% מסך ההוצאות</small>
                         </div>
                     </div>
@@ -211,7 +220,7 @@ function updateChart() {
     window.expenseChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: Object.keys(expensesByCategory),
+            labels: Object.keys(expensesByCategory).map(category => categoryTranslations[category]),
             datasets: [{
                 data: Object.values(expensesByCategory),
                 backgroundColor: [
@@ -224,7 +233,13 @@ function updateChart() {
             responsive: true,
             plugins: {
                 legend: {
-                    position: 'bottom'
+                    position: 'bottom',
+                    rtl: true,
+                    labels: {
+                        font: {
+                            family: 'system-ui, -apple-system, sans-serif'
+                        }
+                    }
                 }
             }
         }
