@@ -1,131 +1,141 @@
-<!DOCTYPE html>
-<html dir="rtl" lang="he">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ניהול תקציב - מערכת מתקדמת</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
-</head>
-<body>
-    <header>
-        <div class="container header-content">
-            <div class="logo">
-                <i class="fas fa-wallet"></i>
-                ניהול תקציב
-            </div>
-            <nav style="display: flex; gap: 10px;">
-                <div class="nav-item active" onclick="switchTab('dashboard')">דשבורד</div>
-                <div class="nav-item" onclick="switchTab('transactions')">תנועות</div>
-            </nav>
-            <button class="btn" onclick="openModal()">
-                <i class="fas fa-plus"></i>
-                הוספת תנועה
-            </button>
-        </div>
-    </header>
+                      <!DOCTYPE html>
+                      <html dir="rtl" lang="he">
+                      <head>
+                          <meta charset="UTF-8">
+                          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                          <title>ניהול תקציב - מערכת מתקדמת</title>
+                          <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+                          <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+                          <link rel="stylesheet" href="style.css">
+                          <link rel="manifest" href="manifest.json">
+                      </head>
+                      <body>
+                          <header>
+                              <div class="container header-content">
+                                  <div class="logo">
+                                      <i class="fas fa-wallet"></i>
+                                      ניהול תקציב
+                                  </div>
+                                  <nav style="display: flex; gap: 10px;">
+                                      <div class="nav-item active" onclick="switchTab('dashboard')">דשבורד</div>
+                                      <div class="nav-item" onclick="switchTab('transactions')">תנועות</div>
+                                      <div class="nav-item" onclick="switchTab('summary')">סיכום הוצאות</div>
+                                  </nav>
+                                  <button class="btn" onclick="openModal()">
+                                      <i class="fas fa-plus"></i>
+                                      הוספת תנועה
+                                  </button>
+                              </div>
+                          </header>
 
-    <main class="container">
-        <div id="dashboard" class="tab-content">
-            <div class="dashboard">
-                <div class="card stat-card">
-                    <div>
-                        <h3>יתרה נוכחית</h3>
-                        <div class="stat-value" id="totalBalance">₪0</div>
-                    </div>
-                    <div class="stat-icon">
-                        <i class="fas fa-wallet"></i>
-                    </div>
-                </div>
-                
-                <div class="card stat-card">
-                    <div>
-                        <h3>הכנסות החודש</h3>
-                        <div class="stat-value income" id="monthlyIncome">₪0</div>
-                    </div>
-                    <div class="stat-icon" style="background: var(--success)">
-                        <i class="fas fa-arrow-trend-up"></i>
-                    </div>
-                </div>
+                          <main class="container">
+                              <div id="dashboard" class="tab-content">
+                                  <div class="dashboard">
+                                      <div class="card stat-card">
+                                          <div>
+                                              <h3>יתרה נוכחית</h3>
+                                              <div class="stat-value" id="totalBalance">₪0</div>
+                                          </div>
+                                          <div class="stat-icon">
+                                              <i class="fas fa-wallet"></i>
+                                          </div>
+                                      </div>
 
-                <div class="card stat-card">
-                    <div>
-                        <h3>הוצאות החודש</h3>
-                        <div class="stat-value expense" id="monthlyExpense">₪0</div>
-                    </div>
-                    <div class="stat-icon" style="background: var(--danger)">
-                        <i class="fas fa-arrow-trend-down"></i>
-                    </div>
-                </div>
-            </div>
+                                      <div class="card stat-card">
+                                          <div>
+                                              <h3>הכנסות החודש</h3>
+                                              <div class="stat-value income" id="monthlyIncome">₪0</div>
+                                          </div>
+                                          <div class="stat-icon" style="background: var(--success)">
+                                              <i class="fas fa-arrow-trend-up"></i>
+                                          </div>
+                                      </div>
 
-            <div class="card">
-                <h3>תנועות אחרונות</h3>
-                <div class="filters">
-                    <div class="filter-btn active" onclick="setFilter('all')">הכל</div>
-                    <div class="filter-btn" onclick="setFilter('income')">הכנסות</div>
-                    <div class="filter-btn" onclick="setFilter('expense')">הוצאות</div>
-                </div>
-                <div class="transactions" id="transactionsList"></div>
-            </div>
+                                      <div class="card stat-card">
+                                          <div>
+                                              <h3>הוצאות החודש</h3>
+                                              <div class="stat-value expense" id="monthlyExpense">₪0</div>
+                                          </div>
+                                          <div class="stat-icon" style="background: var(--danger)">
+                                              <i class="fas fa-arrow-trend-down"></i>
+                                          </div>
+                                      </div>
+                                  </div>
 
-            <div class="card">
-                <h3>התפלגות הוצאות</h3>
-                <div class="chart">
-                    <canvas id="expenseChart"></canvas>
-                </div>
-            </div>
-        </div>
+                                  <div class="card">
+                                      <h3>תנועות אחרונות</h3>
+                                      <div class="filters">
+                                          <div class="filter-btn active" onclick="setFilter('all')">הכל</div>
+                                          <div class="filter-btn" onclick="setFilter('income')">הכנסות</div>
+                                          <div class="filter-btn" onclick="setFilter('expense')">הוצאות</div>
+                                      </div>
+                                      <div class="transactions" id="transactionsList"></div>
+                                  </div>
 
-        <div id="transactions" class="tab-content" style="display: none;">
-            <div class="card">
-                <h3>כל התנועות</h3>
-                <div class="transactions" id="allTransactionsList"></div>
-            </div>
-        </div>
-    </main>
+                                  <div class="card">
+                                      <h3>התפלגות הוצאות</h3>
+                                      <div class="chart">
+                                          <canvas id="expenseChart"></canvas>
+                                      </div>
+                                  </div>
+                              </div>
 
-    <div class="modal" id="transactionModal">
-        <div class="modal-content">
-            <h2>הוספת תנועה חדשה</h2>
-            <form id="transactionForm" onsubmit="handleTransactionSubmit(event)">
-                <div class="form-group">
-                    <label>סוג</label>
-                    <select name="type" class="form-control" required>
-                        <option value="expense">הוצאה</option>
-                        <option value="income">הכנסה</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>קטגוריה</label>
-                    <select name="category" class="form-control" required>
-                        <option value="food">מזון</option>
-                        <option value="transport">תחבורה</option>
-                        <option value="bills">חשבונות</option>
-                        <option value="entertainment">בידור</option>
-                        <option value="shopping">קניות</option>
-                        <option value="salary">משכורת</option>
-                        <option value="other">אחר</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>סכום</label>
-                    <input type="number" name="amount" class="form-control" required min="0" step="0.01">
-                </div>
-                <div class="form-group">
-                    <label>תיאור</label>
-                    <input type="text" name="description" class="form-control" required>
-                </div>
-                <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                    <button type="button" class="btn secondary" onclick="closeModal()">ביטול</button>
-                    <button type="submit" class="btn">שמירה</button>
-                </div>
-            </form>
-        </div>
-    </div>
+                              <div id="transactions" class="tab-content" style="display: none;">
+                                  <div class="card">
+                                      <h3>כל התנועות</h3>
+                                      <div class="transactions" id="allTransactionsList"></div>
+                                  </div>
+                              </div>
 
-    <script src="script.js"></script>
-</body>
-</html>
+                              <div id="summary" class="tab-content" style="display: none;">
+                                  <div class="card">
+                                      <h3>סיכום הוצאות לפי קטגוריות</h3>
+                                      <div class="expenses-summary">
+                                          <ul id="expensesSummaryList"></ul>
+                                      </div>
+                                  </div>
+                              </div>
+                          </main>
+
+                          <div class="modal" id="transactionModal">
+                              <div class="modal-content">
+                                  <h2>הוספת תנועה חדשה</h2>
+                                  <form id="transactionForm" onsubmit="handleTransactionSubmit(event)">
+                                      <div class="form-group">
+                                          <label>סוג</label>
+                                          <select name="type" class="form-control" required>
+                                              <option value="expense">הוצאה</option>
+                                              <option value="income">הכנסה</option>
+                                          </select>
+                                      </div>
+                                      <div class="form-group">
+                                          <label>קטגוריה</label>
+                                          <select name="category" class="form-control" required>
+                                              <option value="food">מזון</option>
+                                              <option value="transport">תחבורה</option>
+                                              <option value="bills">חשבונות</option>
+                                              <option value="entertainment">בידור</option>
+                                              <option value="shopping">קניות</option>
+                                              <option value="salary">משכורת</option>
+                                              <option value="other">אחר</option>
+                                          </select>
+                                      </div>
+                                      <div class="form-group">
+                                          <label>סכום</label>
+                                          <input type="number" name="amount" class="form-control" required min="0" step="0.01">
+                                      </div>
+                                      <div class="form-group">
+                                          <label>תיאור</label>
+                                          <input type="text" name="description" class="form-control" required>
+                                      </div>
+                                      <div style="display: flex; gap: gap: 10px; justify-content: flex-end;">
+                                          <button type="button" class="btn secondary" onclick="closeModal()">ביטול</button>
+                                          <button type="submit" class="btn">שמירה</button>
+                                      </div>
+                                  </form>
+                              </div>
+                          </div>
+
+                          <script src="script.js"></script>
+                      </body>
+                      </html>
