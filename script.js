@@ -47,18 +47,21 @@ function handleTransactionSubmit(event) {
     event.preventDefault();
     const form = event.target;
     const transaction = {
-        type: form.type.value,
-        category: form.category.value,
-        amount: parseFloat(form.amount.value),
-        description: form.description.value,
-        date: new Date().toISOString(),
-        id: Date.now()
+        type: form.type.value, // סוג התנועה: הכנסה או הוצאה
+        category: form.category.value, // קטגוריה: מזון, תחבורה וכו'
+        amount: parseFloat(form.amount.value), // הסכום של התנועה
+        description: form.description.value, // תיאור התנועה
+        date: new Date().toISOString(), // תאריך התנועה
+        id: Date.now() // מזהה ייחודי
     };
 
+    // הוספת התנועה לרשימה
     transactions.unshift(transaction);
     localStorage.setItem('transactions', JSON.stringify(transactions));
+
+    // עדכון הממשק
     updateUI();
-    closeModal();
+    closeModal(); // סגירת החלון
 }
 
 function deleteTransaction(id) {
